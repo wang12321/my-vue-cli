@@ -20,20 +20,20 @@ import { mapGetters } from 'vuex'
 import { deepClone } from '@/utils/index'
 
 export default {
-  computed: {
-    ...mapGetters([
-      'gamelist'
-    ]),
-    isGameShow() {
-      return this.$store.state.settings.isGameShow
-    }
-  },
   data() {
     return {
       hideGameIds: true,
       hasPushedHideBtn: false,
       allData: []
     }
+  },
+  computed: {
+      ...mapGetters([
+        'gamelist'
+      ]),
+      isGameShow() {
+        return this.$store.state.settings.isGameShow
+      }
   },
   mounted() {
     // 获取游戏平台列表信息

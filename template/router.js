@@ -75,34 +75,42 @@ requireAllVueComponents.keys().forEach((allVueComponentItem) => {
         return
     }
     // 初始化属性值
-    const routerAttribute = function(name, attribute) {
+    const routerAttribute = function(name, attribute, isChildrenName) {
         const init = {
             index: 1,
             icon: 'component',
-            name: name,
+            name: isChildrenName || name,
             permission: [1, 2, 3],
             newTime: new Date()
         }
-        if (attribute === 'newTime') {
-            return (routerName[name] && routerName[name] !== '' && routerName[name][attribute]) ? new Date(routerName[name][attribute]) : init[attribute]
+        if (!isChildrenName) {
+            if (attribute === 'newTime') {
+                return (routerName[name] && routerName[name] !== '' && routerName[name][attribute]) ? new Date(routerName[name][attribute]) : init[attribute]
+            }
+            return (routerName[name] && routerName[name] !== '' && routerName[name][attribute]) ? routerName[name][attribute] : init[attribute]
+        } else {
+            if (attribute === 'newTime') {
+                return (routerName[name] && routerName[name] !== '' && routerName[name]['children'] && routerName[name]['children'][isChildrenName] && routerName[name]['children'][isChildrenName] !== '' && routerName[name]['children'][isChildrenName][attribute]) ? new Date(routerName[name]['children'][isChildrenName][attribute]) : init[attribute]
+            }
+            return (routerName[name] && routerName[name] !== '' && routerName[name]['children'] && routerName[name]['children'][isChildrenName] && routerName[name]['children'][isChildrenName] !== '' && routerName[name]['children'][isChildrenName][attribute]) ? routerName[name]['children'][isChildrenName][attribute] : init[attribute]
         }
-        return (routerName[name] && routerName[name] !== '' && routerName[name][attribute]) ? routerName[name][attribute] : init[attribute]
     }
     // 设置父属性值
-    const parentAttribute = (name) => {
-        router.index = routerAttribute(name, 'index')
-        router.meta.icon = routerAttribute(name, 'icon')
-        router.meta.title = routerAttribute(name, 'name')
-        router.meta.permissionArray = routerAttribute(name, 'permission')
-        router.meta.newTime = routerAttribute(name, 'newTime')
+    const parentAttribute = (parentName, childrenName) => {
+        router.index = routerAttribute(parentName, 'index')
+        router.meta.icon = routerAttribute(parentName, 'icon')
+        router.meta.title = routerAttribute(parentName, 'name')
+        router.meta.permissionArray = routerAttribute(parentName, 'permission')
+        router.meta.newTime = routerAttribute(parentName, 'newTime')
+        childrenAttribute(parentName, childrenName)
     }
     // 设置子属性值
-    const childrenAttribute = (name) => {
-        routerChildren.index = routerAttribute(name, 'index')
-        routerChildren.meta.icon = routerAttribute(name, 'icon')
-        routerChildren.meta.title = routerAttribute(name, 'name')
-        routerChildren.meta.newTime = routerAttribute(name, 'newTime')
-        routerChildren.meta.permissionArray = routerAttribute(name, 'permission')
+    const childrenAttribute = (parentName, childrenName) => {
+        routerChildren.index = routerAttribute(parentName, 'index', childrenName)
+        routerChildren.meta.icon = routerAttribute(parentName, 'icon', childrenName)
+        routerChildren.meta.title = routerAttribute(parentName, 'name', childrenName)
+        routerChildren.meta.newTime = routerAttribute(parentName, 'newTime', childrenName)
+        routerChildren.meta.permissionArray = routerAttribute(parentName, 'permission', childrenName)
     }
     switch (routerArr.length) {
         case 3:
@@ -110,10 +118,9 @@ requireAllVueComponents.keys().forEach((allVueComponentItem) => {
             routerMap[routerObj.name] = routerObj.component
 
             // 当路由不是嵌套路径时 直接push到routerList中
-            parentAttribute(routerObj.name)
+            parentAttribute(routerObj.name, routerObj.name)
             router.children.push(routerChildren)
-            routerChildren.path = routerObj.path + ((routerName[routerObj.name] && routerName[routerObj.name] !== '' && routerName[routerObj.name]['isID'] && isGameShow) ? routerName[routerObj.name]['isID'] : '')
-            childrenAttribute(routerObj.name)
+            routerChildren.path = routerObj.path + ((routerName[routerObj.name] && routerName[routerObj.name] !== '' && routerName[routerObj.name]['isID']) ? routerName[routerObj.name]['isID'] : '')
             routerList.push(router)
             break
         case 4:
@@ -124,9 +131,8 @@ requireAllVueComponents.keys().forEach((allVueComponentItem) => {
             router.path = routerArr[2] === routerArr[3] ? '/' + routerArr[2] + 'p' : '/' + routerArr[1] + '/' + routerArr[2]
             router.name = routerArr[2] + 'p'
             router.meta.breadcrumb = routerArr[2] !== routerArr[3]
-            parentAttribute(routerArr[2])
-            routerChildren.path = routerArr[3] + ((routerName[routerObj.name] && routerName[routerObj.name] !== '' && routerName[routerObj.name]['isID'] && isGameShow) ? routerName[routerObj.name]['isID'] : '')
-            childrenAttribute(routerObj.name)
+            parentAttribute(routerArr[2], routerObj.name)
+            routerChildren.path = routerArr[3] + ((routerName[routerObj.name] && routerName[routerObj.name] !== '' && routerName[routerObj.name]['isID']) ? routerName[routerObj.name]['isID'] : '')
             routerList.forEach(item => {
                 if (routerArr[2] + 'p' === item.name) {
                     item.children.push(routerChildren)

@@ -5,20 +5,10 @@ import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
-import { routerName } from '@/router/routerName'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['/login'] // no redirect whitelist
-
-function getSearchParam(name) {
-  const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`, 'i')
-  const r = window.location.search.substr(1).match(reg)
-  if (r != null) {
-    return decodeURIComponent(r[2])
-  }
-  return null
-}
 
 router.beforeEach(async(to, from, next) => {
   // start progress bar
@@ -65,11 +55,10 @@ router.beforeEach(async(to, from, next) => {
         store.commit('permission/SET_ROUTES', store.state.permission.addRoutes)
         next('/')
       }
-      // 如果有gameId 处理/:id 动态路由 可以配置任意参数
-      if (store.state.permission.gameId !== '' && (routerName[to.name] && routerName[to.name] !== '' && to.path.indexOf(routerName[to.name]['isID']) > -1) && store.state.settings.isGameShow) {
+      // 如果有gameId 处理/:id 动态路由
+      if (store.state.permission.gameId !== '' && to.path.includes(':id') && store.state.settings.isGameShow) {
         const params = {}
-        const isID = routerName[to.name]['isID'].substring(2, routerName[to.name]['isID'].length)
-        params[isID] = store.state.permission.gameId
+        params['id'] = store.state.permission.gameId
         next({ ...to, params: params })
       }
     }

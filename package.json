@@ -1,6 +1,6 @@
 {
-  "name": "wlg-cli",
-  "version": "1.0.5",
+  "name": "wlg-cli-ff",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "bin": {

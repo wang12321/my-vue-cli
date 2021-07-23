@@ -6,6 +6,7 @@ import 'nprogress/nprogress.css' // progress bar style
 import { getToken, setToken, setPreSetLocalStorage, getPreSetLocalStorage } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import apiURL from '@/services/apiURL'
+import server from './services/server'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -18,6 +19,12 @@ function getSearchParam(name) {
     return decodeURIComponent(r[2])
   }
   return null
+}
+function getRemovedTokenInUrl() {
+  const removeTokenArray = window.location.href.split('token=')
+  const frontPart = removeTokenArray[0].slice(0, removeTokenArray[0].length - 1)
+  const hashPart = removeTokenArray[1].split('#')[1]
+  return `${frontPart}#${hashPart}`
 }
 
 router.beforeEach(async(to, from, next) => {
@@ -40,10 +47,12 @@ router.beforeEach(async(to, from, next) => {
     if (window.location.search !== '' && getSearchParam('token')) {
       setToken('admin-token') // 为了测试先默认设置一个
       // setToken(getSearchParam('token'))
+      server.defaults.headers.common['x-xq5-jwt'] = getToken() ? getToken() : '';
+      window.history.replaceState({}, document.title, getRemovedTokenInUrl());
     }
     if (!getToken()) {
       const url = window.btoa(encodeURIComponent(window.location.href))
-      window.location = `${apiURL[store.state.settings.NODE_ENV].UnifiedLogin}/?request_url=${url}`
+      window.location = `${apiURL[store.state.settings.NODE_ENV].UnifiedLogin}/?request_url=${url}&token_in_url=1`
       return
     }
   }

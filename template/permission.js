@@ -6,7 +6,7 @@ import 'nprogress/nprogress.css' // progress bar style
 import { getToken, setToken, setPreSetLocalStorage, getPreSetLocalStorage } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import apiURL from '@/services/apiURL'
-import { routerName } from '@/router/routerName'
+import server from './services/server'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -19,6 +19,12 @@ function getSearchParam(name) {
     return decodeURIComponent(r[2])
   }
   return null
+}
+function getRemovedTokenInUrl() {
+  const removeTokenArray = window.location.href.split('token=')
+  const frontPart = removeTokenArray[0].slice(0, removeTokenArray[0].length - 1)
+  const hashPart = removeTokenArray[1].split('#')[1]
+  return `${frontPart}#${hashPart}`
 }
 
 router.beforeEach(async(to, from, next) => {
@@ -41,10 +47,12 @@ router.beforeEach(async(to, from, next) => {
     if (window.location.search !== '' && getSearchParam('token')) {
       setToken('admin-token') // 为了测试先默认设置一个
       // setToken(getSearchParam('token'))
+      server.defaults.headers.common['x-xq5-jwt'] = getToken() ? getToken() : '';
+      window.history.replaceState({}, document.title, getRemovedTokenInUrl());
     }
     if (!getToken()) {
       const url = window.btoa(encodeURIComponent(window.location.href))
-      window.location = `${apiURL[store.state.settings.NODE_ENV].UnifiedLogin}/?request_url=${url}`
+      window.location = `${apiURL[store.state.settings.NODE_ENV].UnifiedLogin}/?request_url=${url}&token_in_url=1`
       return
     }
   }
@@ -86,11 +94,10 @@ router.beforeEach(async(to, from, next) => {
         store.commit('permission/SET_ROUTES', store.state.permission.addRoutes)
         next('/')
       }
-      // 如果有gameId 处理/:id 动态路由 可以配置任意参数
-      if (store.state.permission.gameId !== '' && (routerName[to.name] && routerName[to.name] !== '' && to.path.indexOf(routerName[to.name]['isID']) > -1) && store.state.settings.isGameShow) {
+      // 如果有gameId 处理/:id 动态路由
+      if (store.state.permission.gameId !== '' && to.path.includes(':id') && store.state.settings.isGameShow) {
         const params = {}
-        const isID = routerName[to.name]['isID'].substring(2, routerName[to.name]['isID'].length)
-        params[isID] = store.state.permission.gameId
+        params['id'] = store.state.permission.gameId
         next({ ...to, params: params })
       }
     }
